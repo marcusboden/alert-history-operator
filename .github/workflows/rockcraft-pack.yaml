@@ -1,0 +1,35 @@
+name: Rockcraft Pack
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rockcraft-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: pack rock
+        uses: canonical/craft-actions/rockcraft-pack@main
+        with:
+          path: ./rock/
+        id: rockcraft
+      - name: Log in to GitHub Container Registry as actor
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: "${{ github.repository_owner }}"
+          password: "${{ secrets.GHCR_PAT }}"
+      - name: Push OCI Archive to GHCR
+        uses: pr-mpt/actions-push-oci-archive-to-registry@v1
+        with:
+          # The full path to the .tar file inside the downloaded directory
+          archive: ${{ steps.rockcraft.outputs.rock }}
+          
+          # The full target image tag
+          image: test
+
+          # Optional: You can also push a secondary tag like 'latest'
+          # tags: latest
